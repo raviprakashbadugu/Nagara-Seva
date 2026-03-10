@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Login • Nagara Seva</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { color: #fff; min-height: 100vh; background-color: #080912; position: relative; overflow-x: hidden; }
+    #bg { position: fixed; inset: 0; z-index: -2; pointer-events: none; overflow: hidden; }
+    #bg::before { content: ''; position: absolute; inset: 0; background: linear-gradient(rgba(6,6,23,0.56), rgba(6,6,23,0.56)); z-index: 1; pointer-events: none; }
+    .bg-layer { position: absolute; inset: 0; background-size: cover; background-position: center; background-repeat: no-repeat; opacity: 0; transform: scale(1.03); animation: bgFade 24s linear infinite; will-change: opacity, transform; }
+    .bg-layer:nth-child(1) { background-image: url('https://static.investindia.gov.in/s3fs-public/inline-images/shutterstock_1490970731.jpg'); animation-delay: 0s; }
+    .bg-layer:nth-child(2) { background-image: url('https://static.investindia.gov.in/s3fs-public/inline-images/shutterstock_1490970731.jpg'); animation-delay: 6s; }
+    .bg-layer:nth-child(3) { background-image: url('https://static.investindia.gov.in/s3fs-public/inline-images/shutterstock_1490970731.jpg'); animation-delay: 12s; }
+    .bg-layer:nth-child(4) { background-image: url('https://static.investindia.gov.in/s3fs-public/inline-images/shutterstock_1490970731.jpg'); animation-delay: 18s; }
+    @keyframes bgFade { 0%{opacity:0;transform:scale(1.05)} 6%{opacity:1;transform:scale(1)} 25%{opacity:1} 31%{opacity:0} 100%{opacity:0} }
+    .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(12px); border-radius: 14px; }
+    .admin-btn { background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(250,250,250,0.95)); border: 1px solid rgba(11,17,32,0.08); color: #071024; padding: .6rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .admin-btn:hover { opacity: 0.9; }
+    .admin-header { border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 1rem; }
+  </style>
+</head>
+<body class="text-white min-h-screen flex items-center justify-center p-6">
+
+  <div id="bg">
+    <div class="bg-layer"></div>
+    <div class="bg-layer"></div>
+    <div class="bg-layer"></div>
+    <div class="bg-layer"></div>
+  </div>
+
+  <header class="absolute top-6 left-6 right-6 flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-extrabold">🌆 Nagara Seva</h1>
+      <p class="text-sm text-white/70">Admin Panel</p>
+    </div>
+    <div class="text-right">
+      <a href="auth.html" class="text-sm text-white/80 hover:underline">← Back to Login</a>
+    </div>
+  </header>
+
+  <main class="w-full max-w-md">
+    <section class="glass p-8 mx-4 mt-12 admin-header">
+      <h2 class="text-2xl font-bold mb-6 text-center">🔐 Admin Login</h2>
+      
+      <div id="adminError" class="text-red-300 hidden mb-4 p-3 bg-red-500/10 rounded"></div>
+      
+      <form id="adminForm" class="space-y-4">
+        <div>
+          <label class="text-sm font-semibold block mb-2">Admin Email</label>
+          <input id="adminEmail" type="email" required class="w-full p-3 rounded bg-white/5 text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="admin@example.com" />
+        </div>
+        
+        <div>
+          <label class="text-sm font-semibold block mb-2">Password</label>
+          <input id="adminPassword" type="password" required class="w-full p-3 rounded bg-white/5 text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your password" />
+        </div>
+        
+        <div class="flex items-center gap-2 mt-4">
+          <input id="adminRemember" type="checkbox" class="w-4 h-4" />
+          <label class="text-sm">Remember me</label>
+        </div>
+        
+        <button type="submit" class="admin-btn w-full mt-6">Login as Admin</button>
+      </form>
+      
+      <p class="mt-6 text-xs text-white/50 text-center">Default credentials: admin@smartcity.local / admin123</p>
+    </section>
+  </main>
+
+  <script>
+    // Ensure admin account exists
+    function ensureAdminAccount(){
+      try{
+        const existing = JSON.parse(localStorage.getItem('adminAccount') || 'null');
+        if(!existing){
+          const defaultAdmin = { email: 'admin@smartcity.local', password: 'admin123', name: 'Administrator' };
+          localStorage.setItem('adminAccount', JSON.stringify(defaultAdmin));
+        }
+      }catch(e){ console.warn('admin init failed', e); }
+    }
+    ensureAdminAccount();
+
+    const adminForm = document.getElementById('adminForm');
+    const adminError = document.getElementById('adminError');
+
+    function showErr(msg){ 
+      adminError.classList.remove('hidden'); 
+      adminError.textContent = msg; 
+    }
+    function hideErr(){ 
+      adminError.classList.add('hidden'); 
+      adminError.textContent = ''; 
+    }
+
+    adminForm.addEventListener('submit', e=>{
+      e.preventDefault(); 
+      hideErr();
+      
+      const email = document.getElementById('adminEmail').value.trim().toLowerCase();
+      const password = document.getElementById('adminPassword').value;
+      const remember = document.getElementById('adminRemember').checked;
+      
+      const adminAcct = JSON.parse(localStorage.getItem('adminAccount') || 'null');
+      
+      if(!adminAcct || adminAcct.email !== email || adminAcct.password !== password){
+        showErr('Invalid admin credentials. Please try again.');
+        return;
+      }
+      
+      // Set current user as admin
+      const payload = { name: adminAcct.name, email: adminAcct.email, phone: null, isAdmin: true };
+      if(!remember){ payload.expiry = Date.now() + (30*60*1000); } else { payload.expiry = null; }
+      localStorage.setItem('currentUser', JSON.stringify(payload));
+      
+      alert('Admin login successful. Redirecting to admin panel.');
+      location.href = 'admin.html';
+    });
+  </script>
+</body>
+</html>

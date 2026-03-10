@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sign in • Nagara Seva</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Reused theme from hackthon.html */
+    body { color: #aaa1a1; min-height: 100vh; background-color: #080912; position: relative; overflow-x: hidden; }
+    #bg { position: fixed; inset: 0; z-index: -2; pointer-events: none; overflow: hidden; }
+    #bg::before { content: ''; position: absolute; inset: 0; background: linear-gradient(rgba(6,6,23,0.56), rgba(6,6,23,0.56)); z-index: 1; pointer-events: none; }
+    .bg-layer { position: absolute; inset: 0; background-size: cover; background-position: center; background-repeat: no-repeat; opacity: 0; transform: scale(1.03); animation: bgFade 24s linear infinite; will-change: opacity, transform; }
+    .bg-layer:nth-child(1) { background-image: url('https://static.investindia.gov.in/s3fs-public/inline-images/shutterstock_1490970731.jpg'); animation-delay: 0s; }
+    .bg-layer:nth-child(2) { background-image: url('https://static.investindia.gov.in/s3fs-public/inline-images/shutterstock_1490970731.jpg'); animation-delay: 6s; }
+    .bg-layer:nth-child(3) { background-image: url('https://static.investindia.gov.in/s3fs-public/inline-images/shutterstock_1490970731.jpg'); animation-delay: 12s; }
+    .bg-layer:nth-child(4) { background-image: url('https://static.investindia.gov.in/s3fs-public/inline-images/shutterstock_1490970731.jpg'); animation-delay: 18s; }
+    @keyframes bgFade { 0%{opacity:0;transform:scale(1.05)} 6%{opacity:1;transform:scale(1)} 25%{opacity:1} 31%{opacity:0} 100%{opacity:0} }
+    .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(12px); border-radius: 14px; }
+    .issue-btn { background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(250,250,250,0.95)); border: 1px solid rgba(11,17,32,0.08); color: #071024; padding: .6rem 1rem; border-radius: 8px; }
+    .tab { cursor: pointer; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body class="text-white min-h-screen flex items-center justify-center p-6">
+
+  <div id="bg">
+    <div class="bg-layer"></div>
+    <div class="bg-layer"></div>
+    <div class="bg-layer"></div>
+    <div class="bg-layer"></div>
+  </div>
+
+  <header class="absolute top-6 left-6 right-6 flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-extrabold">🌆 Nagara Seva</h1>
+      <p class="text-sm text-white/70">AI-Powered Civic Issue Reporting</p>
+    </div>
+    <div class="text-right">
+      <button id="headerAdminBtn" class="text-sm text-white/80 hover:underline">Admin Login</button>
+    </div>
+  </header>
+
+  <main class="w-full max-w-2xl">
+    <section class="glass p-6 mx-4 mt-12">
+      <div class="flex gap-4 items-center mb-4">
+        <div id="tabLogin" class="tab font-semibold px-3 py-2 bg-white/5 rounded">Login</div>
+        <div id="tabRegister" class="tab font-semibold px-3 py-2 bg-white/5 rounded">Register</div>
+      </div>
+
+      <div id="loginPane">
+        <h2 class="text-xl font-bold mb-3">Sign in</h2>
+        <div id="loginError" class="text-red-300 hidden mb-2"></div>
+        <form id="loginForm" class="space-y-3">
+          <div>
+            <label class="text-sm">Email or Phone</label>
+            <input id="loginId" type="text" required class="w-full mt-1 p-2 rounded bg-white/5 text-black" placeholder="you@example.com or 10-digit phone" />
+          </div>
+          <div>
+            <label class="text-sm">Password</label>
+            <input id="loginPassword" type="password" required class="w-full mt-1 p-2 rounded bg-white/5 text-black" placeholder="Password" />
+          </div>
+          <div class="flex items-center gap-2">
+            <input id="loginRemember" type="checkbox" />
+            <label class="text-sm">Remember me</label>
+          </div>
+          <div class="flex items-center justify-between">
+            <button type="submit" class="issue-btn">Login</button>
+            <a href="#" id="switchToRegister" class="text-sm text-white/80 hover:underline">Create account</a>
+          </div>
+        </form>
+      </div>
+
+      <!-- Admin login moved to a dedicated page: admin_login.html -->
+
+      <div id="regPane" class="hidden">
+        <h2 class="text-xl font-bold mb-3">Create an account</h2>
+        <div id="regError" class="text-red-300 hidden mb-2"></div>
+        <form id="regForm" class="space-y-3">
+          <div>
+            <label class="text-sm">Full name</label>
+            <input id="regName" required class="w-full mt-1 p-2 rounded bg-white/5 text-black" placeholder="Your name" />
+          </div>
+          <div>
+            <label class="text-sm">Email</label>
+            <input id="regEmail" type="email" required class="w-full mt-1 p-2 rounded bg-white/5 text-black" placeholder="you@example.com" />
+          </div>
+          <div>
+            <label class="text-sm">Phone (optional)</label>
+            <input id="regPhone" type="tel" pattern="[0-9]{10}" maxlength="10" class="w-full mt-1 p-2 rounded bg-white/5 text-black" placeholder="10-digit mobile number" />
+          </div>
+          <div>
+            <label class="text-sm">Password</label>
+            <input id="regPassword" type="password" minlength="6" required class="w-full mt-1 p-2 rounded bg-white/5 text-black" placeholder="At least 6 characters" />
+          </div>
+          <div>
+            <label class="text-sm">Confirm password</label>
+            <input id="regConfirm" type="password" required class="w-full mt-1 p-2 rounded bg-white/5 text-black" placeholder="Repeat password" />
+          </div>
+          <div class="flex items-center justify-between">
+            <button type="submit" class="issue-btn">Create account</button>
+            <a href="#" id="switchToLogin" class="text-sm text-white/80 hover:underline">Already have an account?</a>
+          </div>
+        </form>
+      </div>
+
+      <p class="mt-4 text-sm text-white/60">This demo stores credentials locally in your browser only.</p>
+    </section>
+  </main>
+
+  <script>
+    // Tab switching (user login/register)
+    const tabLogin = document.getElementById('tabLogin');
+    const tabRegister = document.getElementById('tabRegister');
+    const loginPane = document.getElementById('loginPane');
+    const regPane = document.getElementById('regPane');
+    const switchToRegister = document.getElementById('switchToRegister');
+    const switchToLogin = document.getElementById('switchToLogin');
+    const headerAdminBtn = document.getElementById('headerAdminBtn');
+
+    function showLogin(){ tabLogin.classList.add('bg-white/10'); tabRegister.classList.remove('bg-white/10'); loginPane.classList.remove('hidden'); regPane.classList.add('hidden'); }
+    function showRegister(){ tabRegister.classList.add('bg-white/10'); tabLogin.classList.remove('bg-white/10'); regPane.classList.remove('hidden'); loginPane.classList.add('hidden'); }
+    tabLogin.addEventListener('click', showLogin);
+    tabRegister.addEventListener('click', showRegister);
+    switchToRegister.addEventListener('click', e => { e.preventDefault(); showRegister(); });
+    switchToLogin.addEventListener('click', e => { e.preventDefault(); showLogin(); });
+
+    // Header Admin button now navigates to separate admin login page
+    if(headerAdminBtn) headerAdminBtn.addEventListener('click', e => { e.preventDefault(); window.location.href = 'admin_login.html'; });
+
+    // Reuse simple client-side auth (localStorage)
+    const loginForm = document.getElementById('loginForm');
+    const regForm = document.getElementById('regForm');
+    const loginError = document.getElementById('loginError');
+    const regError = document.getElementById('regError');
+
+    function showErr(el, msg){ el.classList.remove('hidden'); el.textContent = msg; }
+    function hideErr(el){ el.classList.add('hidden'); el.textContent = ''; }
+
+    loginForm.addEventListener('submit', e=>{
+      e.preventDefault(); hideErr(loginError);
+      const idVal = document.getElementById('loginId').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const remember = document.getElementById('loginRemember').checked;
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const emailCandidate = idVal.toLowerCase();
+      const phoneCandidate = idVal.replace(/[^0-9]/g,'');
+      const user = users.find(u => (
+        (u.email && u.email === emailCandidate) || (u.phone && u.phone === phoneCandidate)
+      ) && u.password === password);
+      if(!user){ showErr(loginError, 'Invalid credentials. Use registered email or phone and correct password.'); return; }
+      setCurrentUser({name:user.name,email:user.email,phone:user.phone}, remember);
+      alert('Login successful — welcome, ' + user.name + '!');
+      location.href = 'hackthon.html';
+    });
+
+    regForm.addEventListener('submit', e=>{
+      e.preventDefault(); hideErr(regError);
+      const name = document.getElementById('regName').value.trim();
+      const email = document.getElementById('regEmail').value.trim().toLowerCase();
+      const phone = (document.getElementById('regPhone').value || '').replace(/[^0-9]/g,'');
+      const password = document.getElementById('regPassword').value;
+      const confirm = document.getElementById('regConfirm').value;
+      if(!name||!email||!password){ showErr(regError,'Please fill all fields.'); return; }
+      if(password.length < 6){ showErr(regError,'Password must be at least 6 characters.'); return; }
+      if(password !== confirm){ showErr(regError,'Passwords do not match.'); return; }
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      if(users.find(u=>u.email===email)){ showErr(regError,'An account with this email already exists.'); return; }
+      if(phone && users.find(u=>u.phone===phone)){ showErr(regError,'An account with this phone already exists.'); return; }
+      users.push({name,email,phone: phone || null,password});
+      localStorage.setItem('users', JSON.stringify(users));
+      // auto-login (default: not remembered)
+      setCurrentUser({name,email,phone: phone || null}, false);
+      alert('Account created — logged in as ' + name + '.');
+      location.href = 'hackthon.html';
+    });
+
+    // Reuse simple client-side auth (localStorage)
+    function setCurrentUser(userObj, remember){
+      const payload = { name: userObj.name, email: userObj.email, phone: userObj.phone || null };
+      if(userObj.isAdmin) payload.isAdmin = true;
+      if(!remember){ payload.expiry = Date.now() + (30*60*1000); } else { payload.expiry = null; }
+      localStorage.setItem('currentUser', JSON.stringify(payload));
+    }
+
+    // Ensure an admin account exists (default) — stored as {email,password,name}
+    function ensureAdminAccount(){
+      try{
+        const existing = JSON.parse(localStorage.getItem('adminAccount') || 'null');
+        if(!existing){
+          const defaultAdmin = { email: 'admin@smartcity.local', password: 'admin123', name: 'Administrator' };
+          localStorage.setItem('adminAccount', JSON.stringify(defaultAdmin));
+        }
+      }catch(e){ console.warn('admin init failed', e); }
+    }
+    ensureAdminAccount();
+
+    // init
+    showLogin();
+  </script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Admin • Nagara Seva</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>body{background:#061025;color:#fff} .card{background:rgba(255,255,255,0.06);backdrop-filter:blur(10px);border-radius:12px;padding:18px;} .small{font-size:13px;color:#ccc}</style>
+</head>
+<body class="min-h-screen p-6">
+  <div class="max-w-4xl mx-auto card">
+    <h2 class="text-2xl font-bold mb-4">Admin — Manage Complaints</h2>
+    <p class="small mb-4">This admin page updates status stored in browser localStorage. Media is stored in IndexedDB.</p>
+    <div id="list" class="space-y-4"></div>
+    <div id="empty" class="text-white/60">No complaints found.</div>
+  </div>
+
+  <script>
+    // IndexedDB helpers (same as in main app)
+    function openMediaDB(){
+      return new Promise((res,rej)=>{
+        const req = indexedDB.open('mediaDB',1);
+        req.onupgradeneeded = () => { req.result.createObjectStore('media',{keyPath:'id'}); };
+        req.onsuccess = ()=> res(req.result);
+        req.onerror = ()=> rej(req.error || new Error('IDB open error'));
+      });
+    }
+    function saveBlobToDB(blob){
+      return openMediaDB().then(db=>new Promise((res,rej)=>{
+        const tx = db.transaction('media','readwrite'); const store=tx.objectStore('media'); const id = Date.now() + Math.floor(Math.random()*9999);
+        store.put({id:id, blob: blob}); tx.oncomplete = ()=>{ db.close(); res(id); }; tx.onerror = ()=>{ rej(tx.error); };
+      }));
+    }
+    function getBlobUrlFromDB(id){
+      return openMediaDB().then(db=>new Promise((res,rej)=>{
+        const tx=db.transaction('media','readonly'); const store=tx.objectStore('media'); const r = store.get(id);
+        r.onsuccess = ()=>{ const rec = r.result; if(!rec){ db.close(); return res(null); } const url = URL.createObjectURL(rec.blob); db.close(); res(url); };
+        r.onerror = ()=>{ db.close(); rej(r.error); };
+      }));
+    }
+
+    function renderAdmin(){
+      const listEl = document.getElementById('list'); listEl.innerHTML='';
+      const items = JSON.parse(localStorage.getItem('complaints')||'[]');
+      if(!items || items.length===0){ document.getElementById('empty').style.display='block'; return; }
+      document.getElementById('empty').style.display='none';
+      items.forEach(it=>{
+        const el = document.createElement('div'); el.className='p-3 bg-white/5 rounded';
+        el.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div>
+              <div class="font-semibold">${escapeHtml(it.issue||'Report')}</div>
+              <div class="small">Ref: <code>${escapeHtml(it.refId||it.id)}</code> • ${escapeHtml(it.area||'')}</div>
+            </div>
+            <div class="small">${new Date(it.createdAt).toLocaleString()}</div>
+          </div>
+          <div class="mt-2 small">${escapeHtml(it.description||'')}</div>
+          <div class="mt-3 flex gap-2 items-center">
+            <select class="statusSelect p-1 rounded bg-white/5">
+              <option value="Submitted">Submitted</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved">Resolved</option>
+            </select>
+            <button class="saveBtn control-btn">Save</button>
+            <button class="viewBtn control-btn">View Media</button>
+            <button class="delBtn control-btn stop">Delete Complaint</button>
+            <a class="downloadLink small ml-3" style="display:none">Download media</a>
+          </div>
+          <div class="mt-2 mediaHolder"></div>
+        `;
+        // attach actions later
+        listEl.appendChild(el);
+        const sel = el.querySelector('.statusSelect'); sel.value = it.status || 'Submitted';
+        const saveBtn = el.querySelector('.saveBtn');
+        saveBtn.addEventListener('click', ()=>{
+          const items2 = JSON.parse(localStorage.getItem('complaints')||'[]');
+          const idx = items2.findIndex(x=>String(x.refId)===String(it.refId)); if(idx===-1) return alert('Not found');
+          items2[idx].status = sel.value; localStorage.setItem('complaints', JSON.stringify(items2)); alert('Status updated'); renderAdmin();
+        });
+        const delBtn = el.querySelector('.delBtn');
+        delBtn.addEventListener('click', ()=>{
+          if(!confirm('Delete this complaint?')) return; const items2 = JSON.parse(localStorage.getItem('complaints')||'[]'); const idx = items2.findIndex(x=>String(x.refId)===String(it.refId)); if(idx!==-1){ items2.splice(idx,1); localStorage.setItem('complaints', JSON.stringify(items2)); }
+          // also remove media from IDB
+          if(it.mediaVideoId) { openMediaDB().then(db=>{ const tx=db.transaction('media','readwrite'); tx.objectStore('media').delete(it.mediaVideoId); tx.oncomplete=()=>db.close(); }); }
+          if(it.mediaAudioId) { openMediaDB().then(db=>{ const tx=db.transaction('media','readwrite'); tx.objectStore('media').delete(it.mediaAudioId); tx.oncomplete=()=>db.close(); }); }
+          renderAdmin();
+        });
+        const viewBtn = el.querySelector('.viewBtn');
+        const mediaHolder = el.querySelector('.mediaHolder');
+        viewBtn.addEventListener('click', async ()=>{
+          mediaHolder.innerHTML = 'Loading media...';
+          mediaHolder.innerHTML = '';
+          if(it.mediaVideoId){ const vUrl = await getBlobUrlFromDB(it.mediaVideoId); if(vUrl){ const v = document.createElement('video'); v.controls=true; v.src=vUrl; v.style.maxWidth='100%'; mediaHolder.appendChild(v); }
+          }
+          if(it.mediaAudioId){ const aUrl = await getBlobUrlFromDB(it.mediaAudioId); if(aUrl){ const au = document.createElement('audio'); au.controls=true; au.src=aUrl; mediaHolder.appendChild(au); }
+          }
+          if(!it.mediaVideoId && !it.mediaAudioId) mediaHolder.innerHTML = '<div class="small">No media attached.</div>';
+        });
+      });
+    }
+
+    function escapeHtml(s){ if(!s) return ''; return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+
+    renderAdmin();
+  </script>
+</body>
+</html>
